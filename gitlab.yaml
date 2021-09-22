@@ -1,0 +1,57 @@
+##################################################################################
+### Deploy Gitlab
+##################################################################################
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitlab
+  namespace: cicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitlab
+  template:
+    metadata:
+      labels:
+        app: gitlab
+    spec:
+      nodeName: kube-worker1
+      containers:
+      - image: gitlab/gitlab-ce
+        name: gitlab
+        env:
+        - name: GITLAB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: gitlab-secret
+              key: Password
+        - name: GITLAB_OMNIBUS_CONFIG
+          value: |
+            external_url 'http://192.168.245.22:30080'
+            nginx['listen_port'] = 80
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        - containerPort: 22
+        volumeMounts:
+        - mountPath: /etc/localtime
+          name: tz
+          readOnly: true
+        - mountPath: /etc/gitlab
+          name: vol
+          subPath: config
+        - mountPath: /var/log/gitlab
+          name: vol
+          subPath: logs
+        - mountPath: /var/opt/gitlab
+          name: vol
+          subPath: data
+      volumes:
+        - name: vol
+          persistentVolumeClaim:
+            claimName: gitlab-data
+        - hostPath:
+            path: /etc/localtime
+            type: ""
+          name: tz

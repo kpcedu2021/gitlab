@@ -1,0 +1,29 @@
+##################################################################################
+## Create PV, PVC
+##################################################################################
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: gitlab-data-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: 192.168.245.21
+    path: /nfs/gitlab
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitlab-data
+  namespace: cicd
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  volumeName: gitlab-data-pv
